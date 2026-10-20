@@ -6,7 +6,7 @@ Objetivo: un nodo en Python que se suscribe a `/joint_states` mientras el robot 
 varias trayectorias, y extrae la evolución temporal de **posición, velocidad y aceleración**
 de cada articulación, por separado para cada trayectoria.
 
-- **Pareja:** Persona A = **Hugo** · Persona B = **Xabier** (reparto sorteado al azar; 7 tareas cada uno)
+- **Pareja:** Persona A = **Hugo** · Persona B = **Xabier** (reparto sorteado al azar y reequilibrado después por carga: el CSV y las gráficas pasaron de A a B)
 - **Fecha límite de entrega:** _(rellenar)_
 - **Entrega:** solo la URL de este repositorio.
 
@@ -33,20 +33,20 @@ Responsable del suscriptor y de todo lo que pasa con los datos.
 
 - [ ] Nodo suscriptor a `/joint_states` (clase propia, POO).
 - [ ] Cálculo de **velocidad y aceleración**. `JointState.velocity` puede venir vacío o ser poco fiable, y la aceleración no viene en el mensaje: hay que derivar numéricamente respecto al tiempo.
-- [ ] Almacenar `(tiempo, posición, velocidad, aceleración)` por articulación y **separado por trayectoria**.
-- [ ] Guardar los resultados en disco (un CSV por trayectoria).
-- [ ] Script o notebook que dibuje las gráficas posición/velocidad/aceleración vs. tiempo.
+- [ ] Almacenar `(tiempo, posición, velocidad, aceleración)` por articulación y **separado por trayectoria**, en una estructura que B pueda leer (ver "Contrato entre nodos").
 - [ ] **Opcional:** mensaje `.msg` propio que empaquete posición, velocidad y aceleración en un solo mensaje (paquete de interfaces aparte, `practica_1_interfaces`).
 
 ### Persona B (Xabier) — Trayectorias del robot
 
 Responsable de mover el robot y de avisar de cuándo empieza y acaba cada trayectoria.
 
-- [ ] Nodo que usa `ControlRobot` (de `ejemplos/control_robot.py`) para ejecutar las trayectorias.
-- [ ] Trayectoria 1: **Joint** (`mover_articulaciones`).
-- [ ] Trayectoria 2: **Lineal** (`mover_a_pose` / `mover_trayectoria` con dos puntos).
-- [ ] Trayectoria 3: **Circular** (varios waypoints sobre una circunferencia con `mover_trayectoria`).
-- [ ] Publicar el inicio y el fin de cada trayectoria para que A sepa dónde cortar los datos.
+- [x] Nodo que usa `ControlRobot` (de `ejemplos/control_robot.py`) para ejecutar las trayectorias.
+- [x] Trayectoria 1: **Joint** (`mover_articulaciones`).
+- [x] Trayectoria 2: **Lineal** (`mover_a_pose` / `mover_trayectoria` con dos puntos).
+- [x] Trayectoria 3: **Circular** (varios waypoints sobre una circunferencia con `mover_trayectoria`).
+- [x] Publicar el inicio y el fin de cada trayectoria para que A sepa dónde cortar los datos.
+- [ ] Guardar los resultados en disco (un CSV por trayectoria).
+- [ ] Script o notebook que dibuje las gráficas posición/velocidad/aceleración vs. tiempo.
 - [ ] **Opcional:** ingesta inteligente. Una clase `DetectorMovimiento` que decide si el robot se está moviendo (umbral de velocidad con nombre de constante) y que A integra en el suscriptor.
 
 ### Calidad del código (los dos, 10 % de la nota)
@@ -68,6 +68,8 @@ Hay que acordarlo antes de programar, para trabajar en paralelo. Propuesta inici
 | Topic `/practica_1/trayectoria_activa` | `std_msgs/String`. B publica el nombre de la trayectoria (`"joint"`, `"lineal"`, `"circular"`) al empezar y `""` al terminar. |
 | Quién guarda | A: el suscriptor abre un buffer nuevo al recibir un nombre y lo cierra al recibir `""`. |
 | Nombres de ficheros | `datos/<trayectoria>.csv` |
+| Quién escribe el CSV | B: recibe de A los datos ya calculados y los escribe en disco. |
+| Datos que pasa A a B | Por cada muestra: `trayectoria`, `tiempo` (s), `articulacion`, `posicion` (rad), `velocidad` (rad/s), `aceleracion` (rad/s²). Formato exacto pendiente de acordar. |
 
 ---
 
