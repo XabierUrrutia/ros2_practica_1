@@ -45,8 +45,8 @@ Responsable de mover el robot y de avisar de cuándo empieza y acaba cada trayec
 - [x] Trayectoria 2: **Lineal** (`mover_a_pose` / `mover_trayectoria` con dos puntos).
 - [x] Trayectoria 3: **Circular** (varios waypoints sobre una circunferencia con `mover_trayectoria`).
 - [x] Publicar el inicio y el fin de cada trayectoria para que A sepa dónde cortar los datos.
-- [ ] Guardar los resultados en disco (un CSV por trayectoria).
-- [ ] Script o notebook que dibuje las gráficas posición/velocidad/aceleración vs. tiempo.
+- [x] Guardar los resultados en disco (un CSV por trayectoria).
+- [x] Script o notebook que dibuje las gráficas posición/velocidad/aceleración vs. tiempo.
 - [ ] **Opcional:** ingesta inteligente. Una clase `DetectorMovimiento` que decide si el robot se está moviendo (umbral de velocidad con nombre de constante) y que A integra en el suscriptor.
 
 ### Calidad del código (los dos, 10 % de la nota)
