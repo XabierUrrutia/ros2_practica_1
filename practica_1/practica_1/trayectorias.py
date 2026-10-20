@@ -2,19 +2,18 @@
 
 from math import cos, sin, pi
 from copy import deepcopy
-from typing import Callable, Dict, List
+from typing import Callable, Dict
 
 import rclpy
-from geometry_msgs.msg import Pose
 from std_msgs.msg import String
 from control_robot import ControlRobot
 
 # Postura de partida común a todas las trayectorias, para que sean repetibles
-POSICION_INICIAL: List[float] = [0.0, -pi / 2, -pi / 2, -pi / 2, pi / 2, 0.0]
+POSICION_INICIAL = [0.0, -pi / 2, -pi / 2, -pi / 2, pi / 2, 0.0]
 # Destino de la trayectoria Joint: gira la base 45° respecto a la posición inicial
-POSICION_JOINT_DESTINO: List[float] = [pi / 4, -pi / 2, -pi / 2, -pi / 2, pi / 2, 0.0]
+POSICION_JOINT_DESTINO = [pi / 4, -pi / 2, -pi / 2, -pi / 2, pi / 2, 0.0]
 # Desplazamiento de la trayectoria lineal, en metros
-DESPLAZAMIENTO_LINEAL: float = 0.1
+DESPLAZAMIENTO_LINEAL = 0.1
 # Parámetros de la trayectoria circular: radio en metros y puntos que la aproximan
 RADIO_CIRCULO: float = 0.05
 PUNTOS_CIRCULO: int = 24
