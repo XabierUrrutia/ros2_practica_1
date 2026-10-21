@@ -23,7 +23,7 @@ Leyenda: `[ ]` pendiente · `[x]` hecho.
 
 - [x] Ambos: clonar el repo y arrancar el entorno (`lab.bat iniciar`, `lab.bat sim 203`).
 - [x] Ambos: comprobar que se ejecutan los ejemplos de `ejemplos/` (publicador, suscriptor, `control_robot.py`).
-- [ ] **A (Hugo):** crear el paquete ROS 2 `practica_1` (`package.xml`, `setup.py`, `setup.cfg`, carpeta del módulo).
+- [x] **A (Hugo):** crear el paquete ROS 2 `practica_1` (`package.xml`, `setup.py`, `setup.cfg`, carpeta del módulo).
 - [ ] **B (Xabier):** crear la rama de trabajo y comprobar que el paquete compila (`colcon build --symlink-install`).
 - [ ] Ambos: acordar la **interfaz entre los dos nodos** (ver "Contrato entre nodos") antes de programar.
 
