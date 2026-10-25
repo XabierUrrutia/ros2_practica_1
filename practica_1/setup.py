@@ -18,6 +18,7 @@ setup(
     license='TODO',
     entry_points={
         'console_scripts': [
+            'recolector = practica_1.recolector:main',
         ],
     },
 )

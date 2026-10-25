@@ -24,12 +24,12 @@ class RecolectarDatos(Node):
         
         Argumentos
             mensaje: estado de las articulaciones."""
-        posiciones = self._extarer_posiciones(mensaje)
+        posiciones = self._extraer_posiciones(mensaje)
         if posiciones is None:
             return
         tiempo = self._tiempo_a_segundos(mensaje)
         posiciones_texto = ", ".join(f"{valor: .3f}" for valor in posiciones.values())
-        self.get_logger().info(f"t={tiempo: .3f}s / posiciones: {posiciones_texto}", throttle_duration_sec = INTERVALO_SEG_LOG)
+        self.get_logger().info(f"tiempo:{tiempo: .3f}s / posiciones: {posiciones_texto}", throttle_duration_sec = INTERVALO_SEG_LOG)
 
     @staticmethod
     def _tiempo_a_segundos(mensaje: JointState) -> float:
