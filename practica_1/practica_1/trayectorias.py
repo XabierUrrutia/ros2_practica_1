@@ -6,7 +6,7 @@ from typing import Callable, Dict
 
 import rclpy
 from std_msgs.msg import String
-from control_robot import ControlRobot
+from practica_1.control_robot import ControlRobot
 
 # Postura de partida común a todas las trayectorias, para que sean repetibles
 POSICION_INICIAL = [0.0, -pi / 2, -pi / 2, -pi / 2, pi / 2, 0.0]
@@ -123,9 +123,14 @@ class EjecutorTrayectorias:
         self.control.destroy_node()
 
 
-if __name__ == '__main__':
+def main() -> None:
+    """Ejecuta las tres trayectorias y muestra si cada una tuvo éxito."""
     rclpy.init()
     ejecutor = EjecutorTrayectorias()
     print(ejecutor.ejecutar_todas())
     ejecutor.cerrar()
     rclpy.shutdown()
+
+
+if __name__ == '__main__':
+    main()

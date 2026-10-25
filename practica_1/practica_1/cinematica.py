@@ -1,63 +1,78 @@
+from collections import deque
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Deque, Dict, Optional, Tuple
 
-INTERVALO_MINIMO: float = 1e-6
+VENTANA_DERIVADA_S: float = 0.1
+
 
 @dataclass
 class EstadoCinematico:
-    """Posicion, velocidad y aceleracion de una articulacion, en radianes"""
+    """Posición (rad), velocidad (rad/s) y aceleración (rad/s²) de una articulación."""
+
     posicion: float
     velocidad: float
     aceleracion: float
 
-class CalculadorCinematica:
-    """Calcula la velocidad"""
-    
-    def __init__(self) -> None:
+
+class DerivadorVentana:
+
+    def __init__(self, ventana_s: float = VENTANA_DERIVADA_S) -> None:
+        self.ventana_s = ventana_s
         self.reiniciar()
 
     def reiniciar(self) -> None:
-        self._tiempo_pasado: Optional[float] = None
-        self._posicion_pasada: Dict[str, float] = {}
-        self._velocidad_pasada: Dict[str, float] = {}
+        self._historial: Deque[Tuple[float, Dict[str, float]]] = deque()
+
+    def derivar(self, tiempo: float, valores: Dict[str, float]) -> Optional[Dict[str, float]]:
+        if self._historial and tiempo <= self._historial[-1][0]:
+            return None 
+        self._historial.append((tiempo, dict(valores)))
+
+        while len(self._historial) >= 2 and tiempo - self._historial[1][0] >= self.ventana_s:
+            self._historial.popleft()
+
+        tiempo_referencia, valores_referencia = self._historial[0]
+        intervalo = tiempo - tiempo_referencia
+        if intervalo < self.ventana_s:
+            return None
+        return {nombre: (valor - valores_referencia[nombre]) / intervalo
+                for nombre, valor in valores.items()}
+
+
+class CalculadorCinematica:
+
+    def __init__(self, ventana_s: float = VENTANA_DERIVADA_S) -> None:
+        self._derivador_velocidad = DerivadorVentana(ventana_s)
+        self._derivador_aceleracion = DerivadorVentana(ventana_s)
+
+    def reiniciar(self) -> None:
+        self._derivador_velocidad.reiniciar()
+        self._derivador_aceleracion.reiniciar()
 
     def actualizar(self, tiempo: float, posiciones: Dict[str, float]) -> Optional[Dict[str, EstadoCinematico]]:
-        if self._tiempo_pasado is None:
-            self._guardar(tiempo, posiciones, {})
+        velocidades = self._derivador_velocidad.derivar(tiempo, posiciones)
+        if velocidades is None:
             return None
-
-        intervalo = tiempo - self._tiempo_pasado
-        if intervalo < INTERVALO_MINIMO:
+        aceleraciones = self._derivador_aceleracion.derivar(tiempo, velocidades)
+        if aceleraciones is None:
             return None
-
-        velocidades = {articulacion: (posicion - self._posiciones_anteriores[articulacion]) / intervalo for articulacion, posicion in posiciones.items()}
-
-        if not self._velocidades_anteriores:
-            self._guardar(tiempo, posiciones, velocidades)
-            return None
-
-        estados = {
+        return {
             articulacion: EstadoCinematico(
                 posicion=posiciones[articulacion],
                 velocidad=velocidades[articulacion],
-                aceleracion=(velocidades[articulacion] - self._velocidades_anteriores[articulacion]) / intervalo,
+                aceleracion=aceleraciones[articulacion],
             )
             for articulacion in posiciones
         }
-        self._guardar(tiempo, posiciones, velocidades)
-        return estados
-
-    def _guardar(self, tiempo: float, posiciones: Dict[str, float], velocidades: Dict[str, float]) -> None:
-        """Guarda la muestra actual como referencia para la siguiente."""
-        self._tiempo_anterior = tiempo
-        self._posiciones_anteriores = dict(posiciones)
-        self._velocidades_anteriores = dict(velocidades)
 
 
 if __name__ == '__main__':
-    PASO_PRUEBA_S = 0.01
-    MUESTRAS_PRUEBA = 5
+    PASO_PRUEBA_S = 0.0025
+    MUESTRAS_PRUEBA = 81
+    MOSTRAR_CADA = 20
     calculador = CalculadorCinematica()
     for indice in range(MUESTRAS_PRUEBA):
         tiempo_prueba = indice * PASO_PRUEBA_S
-        print(f"t={tiempo_prueba:.2f}", calculador.actualizar(tiempo_prueba, {"prueba": tiempo_prueba ** 2}))
+        estado = calculador.actualizar(tiempo_prueba, {"prueba": tiempo_prueba ** 2})
+        if indice % MOSTRAR_CADA == 0:
+            print(f"t={tiempo_prueba:.3f}", estado)
