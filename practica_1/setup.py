@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'recolector = practica_1.recolector:main',
             'trayectorias = practica_1.trayectorias:main',
+            'monitor_estado = practica_1.monitor_estado:main',
         ],
     },
 )

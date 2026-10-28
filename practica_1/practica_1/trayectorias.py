@@ -4,6 +4,7 @@ Trayectorias.py
 Ejecución de trayectorias Joint, lineal y circular del UR3e.
 """
 
+import time
 from math import cos, sin, pi
 from copy import deepcopy
 from typing import Callable, Dict
@@ -39,6 +40,8 @@ SIN_TRAYECTORIA: str = ""
 
 # Guarda en cola antes de descartar los más antiguos
 TAMANO_COLA_PUBLICADOR: int = 10
+
+PAUSA_ESTABILIZACION_S: float = 0.5
 
 
 class EjecutorTrayectorias:
@@ -109,8 +112,10 @@ class EjecutorTrayectorias:
 
         if not self._ir_a_posicion_inicial():
             return False
+        time.sleep(PAUSA_ESTABILIZACION_S)
         self._anunciar(nombre)
         exito = trayectoria()
+        time.sleep(PAUSA_ESTABILIZACION_S)
         self._anunciar(SIN_TRAYECTORIA)
         return exito
 
