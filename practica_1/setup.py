@@ -1,3 +1,9 @@
+"""
+Setup.py
+
+Instalación del paquete ROS 2 practica_1.
+"""
+
 from setuptools import find_packages, setup
 
 package_name = 'practica_1'

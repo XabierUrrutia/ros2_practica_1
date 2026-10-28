@@ -1,4 +1,8 @@
-#!/usr/bin/python3
+"""
+ControlRobot.py
+
+Control del robot UR3e mediante las acciones y servicios
+"""
 
 import copy
 import threading
@@ -28,19 +32,24 @@ from sensor_msgs.msg import JointState
 from shape_msgs.msg import SolidPrimitive
 from tf2_ros import Buffer, TransformListener
 
-SISTEMA_REFERENCIA = "world"  # En ROS 2 el sistema de referencia raíz del robot es "world"
+# En ROS 2 el sistema de referencia raíz del robot es "world"
+SISTEMA_REFERENCIA = "world"
 GRUPO = "robot"
 EFECTOR_FINAL = "wrist_3_link"
-ARTICULACIONES = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint",
-                  "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
-FACTOR_ESCALA = 0.1  # Velocidad y aceleración máximas (fracción de las máximas del robot)
+ARTICULACIONES = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
+# Velocidad y aceleración máximas (fracción de las máximas del robot)
+FACTOR_ESCALA = 0.1
 
 
 class ControlRobot(Node):
-    """Control del robot con MoveIt 2 a través de sus acciones y servicios (move_group)."""
+    """Control del robot con MoveIt 2 a través de sus acciones y servicios."""
 
     def __init__(self, id_robot: str = "") -> None:
-        """id_robot: "" para un robot individual, o "203", "204"... en las escenas con dos robots."""
+        """Crea los clientes y espera a que estén disponibles.
+
+        Args:
+            id_robot: "" para un robot individual o "203", "204", etc. en las escenas con dos robots.
+        """
         super().__init__("control_robot")
         if id_robot:
             self.group_name = f"robot_{id_robot}"
@@ -80,19 +89,46 @@ class ControlRobot(Node):
         self.añadir_suelo()
 
     def __cb_joint_states(self, msg: JointState) -> None:
+        """Guarda la última posición recibida de cada articulación.
+
+        Args:
+            msg: estado de las articulaciones publicado en /joint_states.
+        """
         for nombre, posicion in zip(msg.name, msg.position):
             self.__estado_articulaciones[nombre] = posicion
 
     @staticmethod
     def __esperar(future):
+        """Bloquea hasta que una llamada asíncrona termine y devuelve su resultado.
+
+        Args:
+            future: resultado pendiente de una acción o un servicio.
+
+        Returns:
+            El resultado de la llamada.
+        """
         while not future.done():
             time.sleep(0.01)
         return future.result()
 
     def articulaciones_actuales(self) -> list:
+        """Devuelve la posición actual de las articulaciones del brazo.
+
+        Returns:
+            Posición (rad) de cada articulación, en el orden de ARTICULACIONES.
+        """
         return [self.__estado_articulaciones[j] for j in self.articulaciones]
 
     def __ir_a(self, restricciones: Constraints, wait: bool) -> bool:
+        """Pide a MoveIt que planifique y ejecute un movimiento hasta un objetivo.
+
+        Args:
+            restricciones: objetivo del movimiento (articular o de pose).
+            wait: si es True, espera a que termine el movimiento.
+
+        Returns:
+            True si el objetivo se aceptó y, si se espera, el movimiento terminó con éxito.
+        """
         goal = MoveGroup.Goal()
         goal.request.group_name = self.group_name
         goal.request.num_planning_attempts = 10
@@ -114,6 +150,15 @@ class ControlRobot(Node):
         return resultado.error_code.val == MoveItErrorCodes.SUCCESS
 
     def mover_articulaciones(self, joint_goal: List[float], wait: bool = True) -> bool:
+        """Mueve el robot hasta una posición en el espacio articular.
+
+        Args:
+            joint_goal: posición objetivo de cada articulación (rad).
+            wait: si es True, espera a que termine el movimiento.
+
+        Returns:
+            True si el movimiento se completó con éxito.
+        """
         restricciones = Constraints()
         for nombre, valor in zip(self.articulaciones, joint_goal):
             restricciones.joint_constraints.append(JointConstraint(
@@ -122,6 +167,11 @@ class ControlRobot(Node):
         return self.__ir_a(restricciones, wait)
 
     def pose_actual(self) -> Pose:
+        """Obtiene la pose actual del efector final respecto al sistema "world".
+
+        Returns:
+            Posición y orientación del efector final.
+        """
         transformacion = self.tf_buffer.lookup_transform(
             SISTEMA_REFERENCIA, self.efector_final, rclpy.time.Time(),
             timeout=rclpy.duration.Duration(seconds=5.0))
@@ -133,12 +183,29 @@ class ControlRobot(Node):
         return pose
 
     def pose_a_stamped(self, pose: Pose) -> PoseStamped:
+        """Añade a una pose la cabecera con el sistema de referencia.
+
+        Args:
+            pose: pose expresada en el sistema "world".
+
+        Returns:
+            La misma pose con su sistema de referencia.
+        """
         pose_stamped = PoseStamped()
         pose_stamped.header.frame_id = SISTEMA_REFERENCIA
         pose_stamped.pose = pose
         return pose_stamped
 
     def mover_a_pose(self, pose_goal: Pose, wait: bool = True) -> bool:
+        """Mueve el efector final hasta una pose (posición y orientación).
+
+        Args:
+            pose_goal: pose objetivo del efector final.
+            wait: si es True, espera a que termine el movimiento.
+
+        Returns:
+            True si el movimiento se completó con éxito.
+        """
         restriccion_posicion = PositionConstraint()
         restriccion_posicion.header.frame_id = SISTEMA_REFERENCIA
         restriccion_posicion.link_name = self.efector_final
@@ -163,6 +230,13 @@ class ControlRobot(Node):
 
     def añadir_caja_a_escena_de_planificacion(self, pose_caja: Pose, name: str,
                                               tamaño: tuple = (.1, .1, .1)) -> None:
+        """Añade una caja a la escena de planificación para que MoveIt la evite.
+
+        Args:
+            pose_caja: pose del centro de la caja.
+            name: identificador del objeto en la escena.
+            tamaño: dimensiones de la caja (m) en x, y, z.
+        """
         caja = CollisionObject()
         caja.id = name
         caja.header.frame_id = SISTEMA_REFERENCIA
@@ -178,6 +252,15 @@ class ControlRobot(Node):
         self.__esperar(self.scene_client.call_async(peticion))
 
     def mover_trayectoria(self, poses: List[Pose], wait: bool = True) -> bool:
+        """Mueve el efector final en línea recta pasando por una lista de poses.
+
+        Args:
+            poses: poses que debe recorrer el efector final, en orden.
+            wait: si es True, espera a que termine el movimiento.
+
+        Returns:
+            True si se pudo calcular la trayectoria completa y se ejecutó con éxito.
+        """
         poses_aux = copy.deepcopy(poses)
         poses_aux.insert(0, self.pose_actual())
 
@@ -208,12 +291,22 @@ class ControlRobot(Node):
         return resultado.error_code.val == MoveItErrorCodes.SUCCESS
 
     def añadir_suelo(self) -> None:
+        """Añade el suelo a la escena de planificación, para que el robot no choque con él."""
         pose_suelo = Pose()
         pose_suelo.position.z = -0.026
         pose_suelo.orientation.w = 1.0
         self.añadir_caja_a_escena_de_planificacion(pose_suelo, "suelo", (2, 2, .05))
 
     def mover_pinza(self, anchura_dedos: float, fuerza: float) -> bool:
+        """Abre o cierra la pinza RG2.
+
+        Args:
+            anchura_dedos: separación objetivo entre los dedos.
+            fuerza: fuerza máxima que puede aplicar la pinza.
+
+        Returns:
+            True si la pinza alcanzó la posición objetivo.
+        """
         self.gripper_action_client.wait_for_server()
         goal = GripperCommand.Goal()
         goal.command.position = anchura_dedos

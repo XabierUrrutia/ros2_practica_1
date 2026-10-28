@@ -7,20 +7,30 @@
   <maintainer email="ignacio@todo.todo">ignacio</maintainer>
   <license>TODO</license>
 
+  <!-- Base de los nodos en Python -->
   <exec_depend>rclpy</exec_depend>
+
+  <!-- Mensajes: String (aviso de trayectoria activa) y JointState (estado de las articulaciones) -->
   <exec_depend>control_msgs</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+
+  <!-- control_robot.py los usa para mover el robot con MoveIt 2 -->
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>shape_msgs</exec_depend>
   <exec_depend>moveit_msgs</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
+
+  <!-- Gráficas de posición, velocidad y aceleración -->
   <exec_depend>python3-matplotlib</exec_depend>
+
+  <!-- Mensaje propio EstadoCinematico, que publica el recolector -->
   <exec_depend>practica_1_mensajes</exec_depend>
 
   <test_depend>python3-pytest</test_depend>
 
   <export>
+    <!-- Paquete Python: se instala con setup.py -->
     <build_type>ament_python</build_type>
   </export>
 </package>
